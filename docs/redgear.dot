@@ -1,0 +1,65 @@
+digraph network {
+    pad = 0.4;
+    ranksep = 1.5;
+    nodesep = 0.5;
+    node [shape=box3d, style=filled, fillcolor="skyblue3"];
+
+    master_note [shape=note,
+                 label="Automatic Service Installation/Upgrade\lCentralized Service Configuration\lService Status Monitoring",
+                 fillcolor="none"];
+    master [label="Master Server"];
+    monitor_web [label="Web Server"];
+    monitor_desktop [label="Desktop Client",
+                     shape="box",
+                     fillcolor="yellowgreen"];
+    web_browser [label="Web Browser",
+                 shape="box",
+                 fillcolor="yellowgreen"];
+    repository [label = "{Git Repository|Chat Modules/Configurations|Game Modules/Configurations|Media Modules/Configurations|Other Modules/Configurations}",
+                shape="record",
+                fillcolor="mediumpurple"];
+
+    subgraph cluster_slave {
+        bgcolor=lightgrey;
+        label="Slave Machine";
+
+        slave [label="Slave Daemon"];
+        slave_api [label="Slave API\lC, Python, ..."
+                   shape="component",
+                   fillcolor="lightgoldenrod3"];
+        app_chat [label="Chat Service", fillcolor="none"];
+        app_game [label="Game Service", fillcolor="none"];
+        app_media [label="Media Service", fillcolor="none"];
+        app_other [label="Other Service", fillcolor="none"];
+    }
+
+    { rank = same; master; master_note; }
+    master -> master_note [arrowhead=none];
+
+    edge [dir=both,
+          color=dodgerblue4,
+          fontcolor=dodgerblue4,
+          label="Git/Pull"];
+    repository -> slave [arrowtail="inv", arrowhead="vee"];
+
+    edge [dir=both,
+          label="TCP/Json"];
+    master -> monitor_web;
+    master -> monitor_desktop;
+    master -> slave;
+    slave -> slave_api;
+
+    edge [dir=back,
+          arrowtail="odot",
+          label="Invoke"];
+    slave_api -> app_chat;
+    slave_api -> app_game;
+    slave_api -> app_media;
+    slave_api -> app_other;
+
+    edge [dir=both,
+          arrowhead="normal",
+          arrowtail="normal",
+          label="HTTP"];
+    monitor_web -> web_browser;
+}
