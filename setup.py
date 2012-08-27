@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #
-# RedGear - an application service monitoring framework.
+# RedGear - an application service monitoring system.
 #
-# Copyright © 2012 TinySoft, Inc.
+# Copyright (C) 2012 TinySoft, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,93 +18,40 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Standard setup script.
+RedGear installer
 """
 
-import sys
-import os
+import os, sys
 from distutils.core import setup
-from distutils.command.install_data import install_data
-from distutils.command.sdist import sdist
 
-from buildslave import version
+import redgear
 
-scripts = ["bin/buildslave"]
-# sdist is usually run on a non-Windows platform, but the buildslave.bat file
-# still needs to get packaged.
-if 'sdist' in sys.argv or sys.platform == 'win32':
-    scripts.append("contrib/windows/buildslave.bat")
-    scripts.append("contrib/windows/buildbot_service.py")
-
-class our_install_data(install_data):
-
-    def finalize_options(self):
-        self.set_undefined_options('install',
-            ('install_lib', 'install_dir'),
-        )
-        install_data.finalize_options(self)
-
-    def run(self):
-        install_data.run(self)
-        # ensure there's a buildslave/VERSION file
-        fn = os.path.join(self.install_dir, 'buildslave', 'VERSION')
-        open(fn, 'w').write(version)
-        self.outfiles.append(fn)
-
-class our_sdist(sdist):
-
-    def make_release_tree(self, base_dir, files):
-        sdist.make_release_tree(self, base_dir, files)
-        # ensure there's a buildslave/VERSION file
-        fn = os.path.join(base_dir, 'buildslave', 'VERSION')
-        open(fn, 'w').write(version)
-
-        # ensure that NEWS has a copy of the latest release notes, copied from
-        # the master tree, with the proper version substituted
-        src_fn = os.path.join('..', 'master', 'docs', 'release-notes.rst')
-        src = open(src_fn).read()
-        src = src.replace('|version|', version)
-        dst_fn = os.path.join(base_dir, 'NEWS')
-        open(dst_fn, 'w').write(src)
+scripts = ["bin/rgmaster",
+           "bin/rgslave"]
 
 setup_args = {
-    'name': "buildbot-slave",
-    'version': version,
-    'description': "BuildBot Slave Daemon",
-    'long_description': "See the 'buildbot' package for details",
-    'author': "Brian Warner",
-    'author_email': "warner-buildbot@lothar.com",
-    'maintainer': "Dustin J. Mitchell",
-    'maintainer_email': "dustin@v.igoro.us",
-    'url': "http://buildbot.net/",
-    'license': "GNU GPL",
+    'name': "redgear",
+    'version': redgear.__version__,
+    'description': "RedGear monitoring system",
+    'long_description': redgear.__doc__,
+    'author': redgear.__author__,
+    'author_email': "mail@mail.com",
+    'url': "https://github.com/tomnotcat/redgear",
+    'license': redgear.__license__,
+    'platforms': "any",
     'classifiers': [
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 1 - Planning',
         'Environment :: No Input/Output (Daemon)',
-        'Intended Audience :: Developers',
+        'Framework :: Twisted',
+        'Intended Audience :: System Administrators',
         'License :: OSI Approved :: GNU General Public License (GPL)',
-        'Topic :: Software Development :: Build Tools',
-        'Topic :: Software Development :: Testing',
+        'Topic :: System :: Monitoring',
         ],
-
     'packages': [
-        "buildslave",
-        "buildslave.commands",
-        "buildslave.scripts",
-        "buildslave.monkeypatches",
-        "buildslave.test",
-        "buildslave.test.fake",
-        "buildslave.test.util",
-        "buildslave.test.unit",
-    ],
+        "redgear",
+        "redgear.test",
+        ],
     'scripts': scripts,
-    # mention data_files, even if empty, so install_data is called and
-    # VERSION gets copied
-    'data_files': [("buildslave", [])],
-    'cmdclass': {
-        'install_data': our_install_data,
-        'sdist': our_sdist
-        }
     }
 
 # set zip_safe to false to force Windows installs to always unpack eggs
@@ -120,9 +67,7 @@ try:
 except ImportError:
     pass
 else:
-    setup_args['install_requires'] = [
-        'twisted >= 8.0.0',
-    ]
+    setup_args['install_requires'] = ['twisted >= 8.0.0',]
 
     if os.getenv('NO_INSTALL_REQS'):
         setup_args['install_requires'] = None
